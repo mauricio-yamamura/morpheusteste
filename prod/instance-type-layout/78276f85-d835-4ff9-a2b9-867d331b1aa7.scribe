@@ -1,0 +1,10 @@
+resource "instance-type-layout" "78276f85-d835-4ff9-a2b9-867d331b1aa7" {
+  code = "78276f85-d835-4ff9-a2b9-867d331b1aa7"
+  name = "Equinix Metal Debian 11"
+  uuid = "0f32026c-c037-4f65-a813-55d13a0c38f1"
+  actions = [ { code = "generic-add-node" } ]
+  instanceType = { code = "debian" }
+  instanceVersion = "11"
+  provisionType = { code = "equinixmetal" }
+  workloads = [ { code = "5c034715-b017-40fa-a2dc-90bf207d48b2" } ]
+}

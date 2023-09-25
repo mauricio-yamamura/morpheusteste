@@ -1,0 +1,15 @@
+resource "container-type" "5c034715-b017-40fa-a2dc-90bf207d48b2" {
+  code = "5c034715-b017-40fa-a2dc-90bf207d48b2"
+  name = "Equinix Metal Debian 11"
+  uuid = "45f22167-64f7-4926-875a-e467b1ee1ffb"
+  actions = [ { code = "generic-remove-node" } ]
+  containerVersion = "11"
+  entryPoint = ""
+  logTypeCode = "vm"
+  provisionType = { code = "equinixmetal" }
+  repositoryImage = ""
+  serverType = "vm"
+  shortName = "equinix-metal-debian-11"
+  statTypeCode = "vm"
+  virtualImage = { code = "equinixmetal.image.os.debian_11" }
+}
