@@ -1,0 +1,10 @@
+resource "instance-type-layout" "89cd15bc-0c4b-420f-bb9a-4ab44205bd24" {
+  code = "89cd15bc-0c4b-420f-bb9a-4ab44205bd24"
+  name = "Equinix Metal Rocky Linux 9"
+  uuid = "59ce5cd3-72ba-4bca-957c-a512bb74f875"
+  actions = [ { code = "generic-add-node" } ]
+  instanceType = { code = "rocky" }
+  instanceVersion = "9"
+  provisionType = { code = "equinixmetal" }
+  workloads = [ { code = "4ba0e90d-8785-483a-a6f5-20eed283b955" } ]
+}
