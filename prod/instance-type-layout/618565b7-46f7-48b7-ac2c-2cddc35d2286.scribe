@@ -1,0 +1,10 @@
+resource "instance-type-layout" "618565b7-46f7-48b7-ac2c-2cddc35d2286" {
+  code = "618565b7-46f7-48b7-ac2c-2cddc35d2286"
+  name = "Equinix Metal Alpine 3"
+  uuid = "1e3737f6-59f7-4acc-b9a1-496799a2c2e3"
+  actions = [ { code = "generic-add-node" } ]
+  instanceType = { code = "alpine" }
+  instanceVersion = "3"
+  provisionType = { code = "equinixmetal" }
+  workloads = [ { code = "62fb1e47-728d-4ae1-b7ea-6cdc4dd4be29" } ]
+}

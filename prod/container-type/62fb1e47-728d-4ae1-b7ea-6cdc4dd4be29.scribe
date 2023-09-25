@@ -1,0 +1,15 @@
+resource "container-type" "62fb1e47-728d-4ae1-b7ea-6cdc4dd4be29" {
+  code = "62fb1e47-728d-4ae1-b7ea-6cdc4dd4be29"
+  name = "Equinix Metal Alpine 3"
+  uuid = "8201d2dc-0103-4c30-a626-f37f0e756aea"
+  actions = [ { code = "generic-remove-node" } ]
+  containerVersion = "3"
+  entryPoint = ""
+  logTypeCode = "vm"
+  provisionType = { code = "equinixmetal" }
+  repositoryImage = ""
+  serverType = "vm"
+  shortName = "equinix-metal-alpine-3"
+  statTypeCode = "vm"
+  virtualImage = { code = "equinixmetal.image.os.alpine_3" }
+}

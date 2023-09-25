@@ -1,0 +1,12 @@
+resource "instance-type" "alpine" {
+  code = "alpine"
+  name = "Alpine Linux"
+  uuid = "a7892c75-6c8d-4308-b3ce-346cf44071d5"
+  category = "os"
+  deploymentService = "defaultDeployService"
+  environmentPrefix = "ALPINE_LINUX"
+  hasAutoScale = true
+  hasDeployment = true
+  hasSettings = true
+  visibility = "public"
+}
