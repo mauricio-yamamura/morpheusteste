@@ -1,0 +1,15 @@
+resource "container-type" "f06bf542-9047-48fb-9ef6-6a0bda77f961" {
+  code = "f06bf542-9047-48fb-9ef6-6a0bda77f961"
+  name = "Equinix Metal Ubuntu 22.04 LTS"
+  uuid = "a76d231f-de8b-46a3-91cb-726e4ccbf695"
+  actions = [ { code = "generic-remove-node" } ]
+  containerVersion = "22.04"
+  entryPoint = ""
+  logTypeCode = "vm"
+  provisionType = { code = "equinixmetal" }
+  repositoryImage = ""
+  serverType = "vm"
+  shortName = "equinix-metal-ubuntu-22.04-lts"
+  statTypeCode = "vm"
+  virtualImage = { code = "equinixmetal.image.os.ubuntu_22_04" }
+}

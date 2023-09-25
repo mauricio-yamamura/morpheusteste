@@ -1,0 +1,10 @@
+resource "instance-type-layout" "3efe459e-b48b-4956-86f8-59184e9e37b2" {
+  code = "3efe459e-b48b-4956-86f8-59184e9e37b2"
+  name = "Equinix Metal Ubuntu 22.04 LTS"
+  uuid = "9363b665-1975-4bff-ad2d-9c7e32d75384"
+  actions = [ { code = "generic-add-node" } ]
+  instanceType = { code = "ubuntu" }
+  instanceVersion = "22.04"
+  provisionType = { code = "equinixmetal" }
+  workloads = [ { code = "f06bf542-9047-48fb-9ef6-6a0bda77f961" } ]
+}
