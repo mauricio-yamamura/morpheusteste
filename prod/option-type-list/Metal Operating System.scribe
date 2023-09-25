@@ -1,0 +1,18 @@
+resource "option-type-list" "Metal Operating System" {
+  name = "Metal Operating System"
+  uuid = "684e791b-ebd1-4ad9-804f-91ad4fb5c65d"
+  config = "{\"sourceHeaders\":[{\"name\":\"Content-Type\",\"value\":\"application/json\",\"masked\":false}]}"
+  ignoreSSLErrors = true
+  realTime = true
+  requestScript = "results=[{name:\"os\",value: data.metalplan}]"
+  sourceMethod = "POST"
+  sourceUrl = "https://osbapp.osbplus.com.br/api/webhooks/incoming/genericjson?code=83699ec7c1d794c0c780e49a5c72972590571fd8&action=MetalInputs&actionClient=morpheus-tst.loonar.dev"
+  translationScript = <<EOFSCRIBE
+var i=0;
+results = [];
+for(i; i<data.items.length; i++) {
+  results.push({name: data.items[i].name, value: data.items[i].value,type:data.items[i].type,version:data.items[i].version});
+}
+EOFSCRIBE
+  visibility = "public"
+}

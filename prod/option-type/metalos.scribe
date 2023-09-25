@@ -1,0 +1,13 @@
+resource "option-type" "metalos" {
+  code = "metalos"
+  name = "Metal - Operating System"
+  uuid = "ab0cd248-ab6a-4fd5-bff6-96f03b648b61"
+  dependsOnCode = "metalplan"
+  fieldContext = "config.customOptions"
+  fieldLabel = "Operating System"
+  fieldName = "metalos"
+  optionList = { name = "Metal Operating System" }
+  optionSource = "list"
+  required = true
+  type = "select"
+}
