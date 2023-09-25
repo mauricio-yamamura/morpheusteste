@@ -1,0 +1,16 @@
+resource "option-type-list" "Service Book - Period" {
+  name = "Service Book - Period"
+  uuid = "7747e189-de2b-4ab1-a7a0-e1ce83192d89"
+  initialDataset = <<EOFSCRIBE
+'Jan/2023','202301'
+'Fev/2023','202302'
+'Mar/2023','202303'
+'Abr/2023','202304'
+'Mai/2023','202305'
+'Jun/2023','202306'
+'Jul/2023','202307'
+'Ago/2023','202308'
+EOFSCRIBE
+  type = "manual"
+  visibility = "public"
+}
