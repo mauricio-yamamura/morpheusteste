@@ -1,0 +1,12 @@
+resource "option-type" "metalgroup" {
+  code = "metalgroup"
+  name = "Metal - Group"
+  uuid = "29461659-4652-415f-9c6a-5ffcc18d8735"
+  fieldContext = "config.customOptions"
+  fieldLabel = "Group"
+  fieldName = "metalgroup"
+  optionList = { name = "Equinix Groups" }
+  optionSource = "list"
+  required = true
+  type = "select"
+}

@@ -1,0 +1,14 @@
+resource "option-type-list" "Equinix Groups" {
+  name = "Equinix Groups"
+  uuid = "c9e0aba6-ebf8-4239-b748-19fae006d72c"
+  apiType = "groups"
+  realTime = true
+  requestScript = "results = {zoneTypeId:41}"
+  translationScript = <<EOFSCRIBE
+for (var x = 0; x < data.length; x++) {
+  results.push({name: data[x].name, value:data[x].id});
+}
+EOFSCRIBE
+  type = "api"
+  visibility = "public"
+}
