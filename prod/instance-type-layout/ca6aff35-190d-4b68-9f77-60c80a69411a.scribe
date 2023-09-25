@@ -1,0 +1,9 @@
+resource "instance-type-layout" "ca6aff35-190d-4b68-9f77-60c80a69411a" {
+  code = "ca6aff35-190d-4b68-9f77-60c80a69411a"
+  name = "Equinix Metal CentOS 7"
+  uuid = "857690c3-75ec-4e15-a257-516cd579f3d6"
+  instanceType = { code = "rhel" }
+  instanceVersion = "7"
+  provisionType = { code = "equinixmetal" }
+  workloads = [ { code = "35e8fdf7-ca02-4cd5-93fc-53db8a279e6a" } ]
+}

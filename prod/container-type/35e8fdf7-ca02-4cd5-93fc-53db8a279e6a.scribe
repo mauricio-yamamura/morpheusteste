@@ -1,0 +1,14 @@
+resource "container-type" "35e8fdf7-ca02-4cd5-93fc-53db8a279e6a" {
+  code = "35e8fdf7-ca02-4cd5-93fc-53db8a279e6a"
+  name = "Equinix Metal CentOS 7"
+  uuid = "0bc6b79d-6b76-4320-ac68-c9eccfc98aae"
+  containerVersion = "7"
+  entryPoint = ""
+  logTypeCode = "vm"
+  provisionType = { code = "equinixmetal" }
+  repositoryImage = ""
+  serverType = "vm"
+  shortName = "equinix-metal-centos-7"
+  statTypeCode = "vm"
+  virtualImage = { code = "equinixmetal.image.os.centos_7" }
+}
