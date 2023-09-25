@@ -1,0 +1,9 @@
+resource "option-type" "metalhostname" {
+  code = "metalhostname"
+  name = "Metal - hostname"
+  uuid = "024563af-a22d-44c1-9762-a4124a555a9e"
+  fieldContext = "config.customOptions"
+  fieldLabel = "Hostname"
+  fieldName = "metalhostname"
+  required = true
+}
