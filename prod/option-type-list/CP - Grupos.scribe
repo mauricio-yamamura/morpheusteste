@@ -1,0 +1,12 @@
+resource "option-type-list" "CP - Grupos" {
+  name = "CP - Grupos"
+  uuid = "36351c77-e791-4cfd-a943-33fb615727a2"
+  apiType = "groups"
+  realTime = true
+  translationScript = <<EOFSCRIBE
+for (var x = 0; x < data.length; x++) {
+  results.push({name: data[x].name, value:data[x].id});
+}
+EOFSCRIBE
+  type = "api"
+}

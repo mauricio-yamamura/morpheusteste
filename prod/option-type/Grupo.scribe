@@ -1,0 +1,12 @@
+resource "option-type" "Grupo" {
+  code = "Grupo"
+  name = "CP - Grupo"
+  uuid = "1f1afb2b-ce9b-45db-9bfd-832773da5d9b"
+  fieldContext = "config.customOptions"
+  fieldLabel = "Grupo"
+  fieldName = "Grupo"
+  optionList = { name = "CP - Grupos" }
+  optionSource = "list"
+  required = true
+  type = "select"
+}
