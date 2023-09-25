@@ -1,0 +1,12 @@
+resource "option-type" "metalmetro" {
+  code = "metalmetro"
+  name = "Metal - Metro"
+  uuid = "e7779cbd-a7fd-446f-8483-3e2f58be75aa"
+  fieldContext = "config.customOptions"
+  fieldLabel = "Metro"
+  fieldName = "metalmetro"
+  optionList = { name = "Equinix Metros" }
+  optionSource = "list"
+  required = true
+  type = "select"
+}
