@@ -1,0 +1,15 @@
+resource "container-type" "36257fc0-7052-4023-bde2-71a0769d1173" {
+  code = "36257fc0-7052-4023-bde2-71a0769d1173"
+  name = "Equinix Metal Ubuntu 16.04 LTS"
+  uuid = "6784e2e0-bd0f-4878-869c-a81565b2c1a0"
+  actions = [ { code = "generic-remove-node" } ]
+  containerVersion = "16.04"
+  entryPoint = ""
+  logTypeCode = "vm"
+  provisionType = { code = "equinixmetal" }
+  repositoryImage = ""
+  serverType = "vm"
+  shortName = "equinix-metal-ubuntu-16.04-lts"
+  statTypeCode = "vm"
+  virtualImage = { code = "equinixmetal.image.os.ubuntu_16_04" }
+}

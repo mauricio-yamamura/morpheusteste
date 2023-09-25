@@ -1,0 +1,10 @@
+resource "instance-type-layout" "23363852-3d5c-4ead-8f9a-3323799eaab6" {
+  code = "23363852-3d5c-4ead-8f9a-3323799eaab6"
+  name = "Equinix Metal Ubuntu 16.04 LTS"
+  uuid = "9063fe7b-b955-4886-84aa-a36aaea982e0"
+  actions = [ { code = "generic-add-node" } ]
+  instanceType = { code = "ubuntu" }
+  instanceVersion = "16.04"
+  provisionType = { code = "equinixmetal" }
+  workloads = [ { code = "36257fc0-7052-4023-bde2-71a0769d1173" } ]
+}
