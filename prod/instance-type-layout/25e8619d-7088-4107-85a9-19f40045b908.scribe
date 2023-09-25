@@ -1,0 +1,10 @@
+resource "instance-type-layout" "25e8619d-7088-4107-85a9-19f40045b908" {
+  code = "25e8619d-7088-4107-85a9-19f40045b908"
+  name = "Equinix Metal Ubuntu 18.04 LTS"
+  uuid = "0ae6884d-7e7f-4bc7-9284-a3907a65f31b"
+  actions = [ { code = "generic-add-node" } ]
+  instanceType = { code = "ubuntu" }
+  instanceVersion = "18.04"
+  provisionType = { code = "equinixmetal" }
+  workloads = [ { code = "3a45ce57-6b2f-4455-a30a-885e59e255c8" } ]
+}

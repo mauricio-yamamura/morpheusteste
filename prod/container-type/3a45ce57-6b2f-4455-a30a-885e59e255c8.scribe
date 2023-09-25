@@ -1,0 +1,15 @@
+resource "container-type" "3a45ce57-6b2f-4455-a30a-885e59e255c8" {
+  code = "3a45ce57-6b2f-4455-a30a-885e59e255c8"
+  name = "Equinix Metal Ubuntu 18.04 LTS"
+  uuid = "5f6d1162-a139-4ea3-8a94-3b62cec72d7a"
+  actions = [ { code = "generic-remove-node" } ]
+  containerVersion = "18.04"
+  entryPoint = ""
+  logTypeCode = "vm"
+  provisionType = { code = "equinixmetal" }
+  repositoryImage = ""
+  serverType = "vm"
+  shortName = "equinix-metal-ubuntu-18.04-lts"
+  statTypeCode = "vm"
+  virtualImage = { code = "equinixmetal.image.os.ubuntu_18_04" }
+}
