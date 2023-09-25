@@ -8,5 +8,6 @@ resource "instance-type" "alpine" {
   hasAutoScale = true
   hasDeployment = true
   hasSettings = true
+  layouts = [ { code = "618565b7-46f7-48b7-ac2c-2cddc35d2286" } ]
   visibility = "public"
 }
