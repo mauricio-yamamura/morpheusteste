@@ -1,0 +1,12 @@
+resource "option-type" "instacetype" {
+  code = "instacetype"
+  name = "CP - InstanceTypesinstancetype"
+  uuid = "0cf1c113-0fda-4e9d-ab8d-47164a69d82c"
+  fieldContext = "config.customOptions"
+  fieldLabel = "Instance Type"
+  fieldName = "instacetype"
+  optionList = { name = "Instance Types" }
+  optionSource = "list"
+  required = true
+  type = "select"
+}
