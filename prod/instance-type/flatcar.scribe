@@ -1,0 +1,12 @@
+resource "instance-type" "flatcar" {
+  code = "flatcar"
+  name = "Flatcar Linux"
+  uuid = "10e2b425-36d6-4752-bdf5-e4478c0cd7d1"
+  category = "os"
+  deploymentService = "defaultDeployService"
+  environmentPrefix = "FLATCAR_LINUX"
+  hasAutoScale = true
+  hasDeployment = true
+  hasSettings = true
+  visibility = "public"
+}
