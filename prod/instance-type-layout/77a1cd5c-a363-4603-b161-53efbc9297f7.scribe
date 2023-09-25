@@ -1,0 +1,10 @@
+resource "instance-type-layout" "77a1cd5c-a363-4603-b161-53efbc9297f7" {
+  code = "77a1cd5c-a363-4603-b161-53efbc9297f7"
+  name = "Equinix Metal VMware ESXi 7.0 (experimental)"
+  uuid = "98d05450-4e92-4f49-83ba-8d29fa92a5f6"
+  actions = [ { code = "generic-add-node" } ]
+  instanceType = { code = "esxi" }
+  instanceVersion = "7.0"
+  provisionType = { code = "equinixmetal" }
+  workloads = [ { code = "16886ecd-af3a-450f-b7ac-f335c9caac17" } ]
+}
