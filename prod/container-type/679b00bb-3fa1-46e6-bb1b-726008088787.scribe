@@ -1,0 +1,15 @@
+resource "container-type" "679b00bb-3fa1-46e6-bb1b-726008088787" {
+  code = "679b00bb-3fa1-46e6-bb1b-726008088787"
+  name = "Equinix Metal Flatcar Linux - Beta"
+  uuid = "dfe24c8d-6bc5-439c-af32-602edd7bc85a"
+  actions = [ { code = "generic-remove-node" } ]
+  containerVersion = "1.0"
+  entryPoint = ""
+  logTypeCode = "vm"
+  provisionType = { code = "equinixmetal" }
+  repositoryImage = ""
+  serverType = "vm"
+  shortName = "equinix-metal-flatcar-linux---beta"
+  statTypeCode = "vm"
+  virtualImage = { code = "equinixmetal.image.os.flatcar_beta" }
+}
