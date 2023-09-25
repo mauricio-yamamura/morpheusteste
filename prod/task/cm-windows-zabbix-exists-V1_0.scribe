@@ -1,0 +1,17 @@
+resource "task" "cm-windows-zabbix-exists-V1.0" {
+  code = "cm-windows-zabbix-exists-V1.0"
+  name = "Equinix - CM - Windows - Zabbix - Exists"
+  uuid = "92986510-eb32-4a4d-bee5-7b3ef4bbe507"
+  allowCustomConfig = true
+  dateCreated = "2023-08-15T02:42:02.000Z"
+  executeTarget = "resource"
+  lastUpdated = "2023-08-15T02:42:02.000Z"
+  options = [
+    { optionType = { code = "winrm.elevated" }, value = "on" },
+    {
+      content = { uuid = "ce998e19-8701-4de1-a8fa-06c3d47da03c" }
+      optionType = { code = "script" }
+    }
+  ]
+  taskType = { code = "winrmTask" }
+}
