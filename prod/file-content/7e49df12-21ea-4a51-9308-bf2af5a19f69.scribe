@@ -1,0 +1,230 @@
+resource "file-content" "7e49df12-21ea-4a51-9308-bf2af5a19f69" {
+  uuid = "7e49df12-21ea-4a51-9308-bf2af5a19f69"
+  content = <<EOFSCRIBE
+/*******************************************
+Task Groovy - Equinix - BareMetal - Sync Layouts
+code: bm-sync-layouts
+Objetivo: Sincroniza layouts com as imagens importadas do Bare Metal
+Historico:
+Looonar/MSY -11/07/2023 - Versao Inicial
+********************************************/
+
+import groovy.util.logging.Slf4j 
+import groovy.json.JsonSlurper 
+import groovy.json.JsonBuilder
+import com.morpheusdata.core.util.HttpApiClient
+import com.morpheusdata.core.util.*
+
+@Slf4j
+/*********************************************************************************/
+class Log {
+/*********************************************************************************/
+   
+    def HeaderMsg = "[baremetal_sync_layout]"
+    def info(Linha) { 
+        log.info HeaderMsg+Linha		                                   
+    }
+}
+
+/*********************************************************************************/
+def restapi_Token(def log,def TenantId,def Username, def Password)
+/*********************************************************************************/
+{
+
+    if (TenantId!="")
+       Username = TenantId.toString()+"\\"+Username
+      
+    RestApiUtil.RestOptions getToken = new RestApiUtil.RestOptions(
+            headers:[contentType:'application/x-www-form-urlencoded'],
+            queryParams:["client_id":"morph-api", "grant_type":"password", "scope":"write", "username":Username, "password":Password]
+            )
+
+    def tokenResults = RestApiUtil.callJsonApi(morpheus.applianceUrl,'/oauth/token',null,null, getToken ,'POST')      
+
+    if (! tokenResults.success)
+    {
+        throw new Exception(log.HeaderMsg+"Não conseguiu criar token para o usuario ${Username} no Tenant ${TenantId}: ${tokenResults}")
+    }
+
+    TenantToken = tokenResults.data.access_token
+
+}
+
+/*********************************************************************************/
+def restapiDelete(def log,String TenantToken,String path,def QueryParams)
+/*********************************************************************************/
+{
+  if (TenantToken=="")
+    TenantToken = morpheus.apiAccessToken
+
+  if (!QueryParams)
+    QueryParams = [:]    
+
+  RestApiUtil.RestOptions requestOpts = new RestApiUtil.RestOptions(headers:['Authorization':'Bearer '+TenantToken], contentType: 'application/json',queryParams:QueryParams)
+  def results = RestApiUtil.callJsonApi(morpheus.applianceUrl,path,null,null, requestOpts ,'DELETE')
+  if (!results.success)
+  {
+    log.info("Erro deletando ${path}:${results}")
+    println "Erro deletando ${path}:${results}"
+    throw new Exception(log.HeaderMsg+"Erro deletando ${path}:${results}")
+  }
+  return results
+}
+
+
+/*********************************************************************************/
+def restapiGet(def log,String TenantToken,String path,def QueryParams)
+/*********************************************************************************/
+{
+  if (!QueryParams)
+    QueryParams = [max:"250"]
+
+  if (TenantToken=="")
+    TenantToken = morpheus.apiAccessToken
+
+  RestApiUtil.RestOptions requestOpts = new RestApiUtil.RestOptions(
+            headers:['Authorization':'Bearer '+TenantToken], 
+            contentType: 'application/json',
+            queryParams:QueryParams)
+  def results = RestApiUtil.callJsonApi(morpheus.applianceUrl,path,null,null, requestOpts ,'GET')
+  if (!results.success)
+  {
+    log.info("Erro consultando ${path}:${results}")
+  }
+  return results
+}
+
+/*********************************************************************************/
+def restapiPost(def log,String TenantToken,String path,def QueryParams,def Body)
+/*********************************************************************************/
+{
+
+  if (TenantToken=="")
+    TenantToken = morpheus.apiAccessToken
+
+  RestApiUtil.RestOptions requestOpts = new RestApiUtil.RestOptions(
+            headers:['Authorization':'Bearer '+TenantToken], 
+            contentType: 'application/json',
+            queryParams:QueryParams,
+            body:Body)
+  def results = RestApiUtil.callJsonApi(morpheus.applianceUrl,path,null,null, requestOpts ,'POST')
+  if (!results.success)
+  {
+    log.info("Erro executando ${path}:${results}")
+  }
+  return results
+}
+
+
+/*********************************************************************************/
+def log = new Log()
+
+//Lista Imagens
+def resultsImages = restapiGet(log,"","/api/virtual-images",[phrase:"Equinix Metal", filterType:"All",max:"250"])
+log.info("resultsImages: ${resultsImages.data.virtualImages}")
+
+//--------------------
+//Lista Container-Types (node type)
+def resultsContainerTypes = restapiGet(log,"","/api/library/container-types",[max:"250",provisionType:"equinixmetal"])
+log.info("resultsContainerTypes: ${resultsContainerTypes.data.containerTypes}")
+
+
+//--------------------
+//Lista Instance-Types
+def resultsInstanceTypes = restapiGet(log,"","/api/library/instance-types",[max:"250"])
+log.info("resultsInstanceTypes: ${new JsonBuilder(resultsInstanceTypes.data.instanceTypes).toPrettyString()}")
+
+
+//--------------------
+//Lista Layouts
+def resultsLayouts = restapiGet(log,"","/api/library/layouts",[provisionType:'equinixmetal',max:"250"])
+log.info("resultsLayouts: ${resultsLayouts.data.instanceTypeLayouts}")
+
+String imageFamily = ""
+String imageCategory = ""
+String version
+int idInstanceType
+def idContainerType
+for(image in resultsImages.data.virtualImages) //base é o cadastro de imagens
+{
+    // Verifica se existe InstanceType para a imagem
+    imageFamily = (image.osType?.osFamily ? image.osType?.osFamily.toLowerCase() : 'na')
+    imageCategory = (image.osType?.category ? image.osType?.category.toLowerCase() : 'na')
+    log.info("Localizando instance type para imagem [${image.name}] imageFamily:${imageFamily} imageCategory:${imageCategory} ${image.id} ")
+    //log.info("image: ${new JsonBuilder(image).toPrettyString()}")
+
+    def instanceType  = resultsInstanceTypes.data.instanceTypes.find{it.code.toLowerCase()==imageCategory }
+    
+    if (! instanceType)
+      instanceType  = resultsInstanceTypes.data.instanceTypes.find{it.code.toLowerCase()==imageFamily} 
+
+    if (! instanceType && imageCategory=="linux")
+    {
+      instanceType  = resultsInstanceTypes.data.instanceTypes.find{image.name.toLowerCase().contains(it.code.toLowerCase())} 
+    }
+    
+
+    if (instanceType)
+    {
+        idInstanceType = instanceType.id
+        log.info("Localizou instance type: ${idInstanceType}")
+
+        // Verifica se existe Node Type cadastrado 
+        idContainerType = resultsContainerTypes.data.containerTypes.find{it.virtualImage != null && it.virtualImage.id == image.id}?.id
+        if (idContainerType==null)
+        {
+            version = image.name.replaceAll("[^\\d.]", "")
+            if (version == "")
+              version = "1.0"
+            log.info("Cadastrar Container-Type (Node Type) version ${version}")            
+            Body = [
+                containerType:[
+                    name:'Equinix Metal '+image.name.replace(' (Equinix Metal)',''),
+                    shortName:'equinix-metal-'+image.name.replace(' (Equinix Metal)','').toLowerCase().replace(' ','-'),
+                    containerVersion:version,
+                    provisionTypeCode:'equinixmetal',
+                    virtualImageId:image.id,
+                    logTypeCode:'vm',
+                    serverType:'vm',
+                    statTypeCode:'vm'
+                ]
+            ]
+            results = restapiPost(log,"","/api/library/container-types",[:],Body)
+            log.info("${results}")
+            if (!results.success)
+               throw new Exception(log.HeaderMsg+"Erro inserindo node type ${Body}")
+            else
+              idContainerType = results.data.containerType.id
+        }
+
+        log.info("Localizando layout para imagem ${image.externalId} ${image.id}")
+        if (!resultsLayouts.data.instanceTypeLayouts.find{it.containerTypes[0].virtualImage != null && it.containerTypes[0].virtualImage.id==image.id})
+        {
+            version = image.name.replaceAll("[^\\d.]", "")
+            if (version == "")
+              version = "1.0"
+
+            log.info("Criar Layout idContainerType: ${idContainerType} version:${version}")
+            
+            Body = [
+                instanceTypeLayout:[
+                    name:'Equinix Metal '+image.name.replace(' (Equinix Metal)',''),
+                    instanceVersion:version,
+                    provisionTypeCode:'equinixmetal',
+                    containerTypes:[[id:idContainerType]]
+                ]
+            ]
+            results = restapiPost(log,"","/api/library/instance-types/${idInstanceType}/layouts",[:],Body)
+            if (!results.success)
+               throw new Exception(log.HeaderMsg+"Erro inserindo Layout ${Body}")            
+        }
+        else log.info("Layout já existe")
+    }
+    else log.info("Nao localizou instance type")
+
+}
+
+EOFSCRIBE
+  dateCreated = "2023-07-20T19:54:15.000Z"
+  lastUpdated = "2023-08-22T17:42:52.000Z"
+}

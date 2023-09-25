@@ -1,0 +1,14 @@
+resource "task" "BareMetal - Sync Layouts" {
+  name = "BareMetal - Sync Layouts"
+  uuid = "bd2f1fb6-460f-473d-8ad4-54dcd5d6f9af"
+  dateCreated = "2023-07-20T19:54:15.000Z"
+  executeTarget = "local"
+  lastUpdated = "2023-08-22T17:42:52.000Z"
+  options = [
+    {
+      content = { uuid = "7e49df12-21ea-4a51-9308-bf2af5a19f69" }
+      optionType = { code = "groovyScript" }
+    }
+  ]
+  taskType = { code = "groovyTask" }
+}
