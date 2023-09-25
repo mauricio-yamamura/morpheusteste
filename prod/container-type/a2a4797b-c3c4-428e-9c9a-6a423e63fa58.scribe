@@ -1,0 +1,15 @@
+resource "container-type" "a2a4797b-c3c4-428e-9c9a-6a423e63fa58" {
+  code = "a2a4797b-c3c4-428e-9c9a-6a423e63fa58"
+  name = "Equinix Metal Windows 2019 Standard"
+  uuid = "e19195a9-c22f-4558-892e-133af5602df3"
+  actions = [ { code = "generic-remove-node" } ]
+  containerVersion = "2019"
+  entryPoint = ""
+  logTypeCode = "vm"
+  provisionType = { code = "equinixmetal" }
+  repositoryImage = ""
+  serverType = "vm"
+  shortName = "equinix-metal-windows-2019-standard"
+  statTypeCode = "vm"
+  virtualImage = { code = "equinixmetal.image.os.windows_2019" }
+}
