@@ -1,0 +1,15 @@
+resource "container-type" "d38c1e94-edcc-4088-b1dc-a480c73f7a39" {
+  code = "d38c1e94-edcc-4088-b1dc-a480c73f7a39"
+  name = "Equinix Metal VMware ESXi 6.5"
+  uuid = "db84b7ff-b837-4799-b93c-cdf73df02208"
+  actions = [ { code = "generic-remove-node" } ]
+  containerVersion = "6.5"
+  entryPoint = ""
+  logTypeCode = "vm"
+  provisionType = { code = "equinixmetal" }
+  repositoryImage = ""
+  serverType = "vm"
+  shortName = "equinix-metal-vmware-esxi-6.5"
+  statTypeCode = "vm"
+  virtualImage = { code = "equinixmetal.image.os.vmware_esxi_6_5" }
+}
