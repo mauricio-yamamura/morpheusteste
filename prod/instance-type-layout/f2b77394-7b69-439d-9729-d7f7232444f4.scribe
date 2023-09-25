@@ -1,0 +1,10 @@
+resource "instance-type-layout" "f2b77394-7b69-439d-9729-d7f7232444f4" {
+  code = "f2b77394-7b69-439d-9729-d7f7232444f4"
+  name = "Equinix Metal VMware ESXi 8.0 VCF"
+  uuid = "f4db3c85-46c7-43a6-94de-d74ca5337a52"
+  actions = [ { code = "generic-add-node" } ]
+  instanceType = { code = "esxi" }
+  instanceVersion = "8.0"
+  provisionType = { code = "equinixmetal" }
+  workloads = [ { code = "ad72d9ec-2a51-4b28-96f6-5431b015c11f" } ]
+}

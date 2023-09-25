@@ -1,0 +1,15 @@
+resource "container-type" "ad72d9ec-2a51-4b28-96f6-5431b015c11f" {
+  code = "ad72d9ec-2a51-4b28-96f6-5431b015c11f"
+  name = "Equinix Metal VMware ESXi 8.0 VCF"
+  uuid = "73eae29d-249d-43e6-b06d-9a860e56b25b"
+  actions = [ { code = "generic-remove-node" } ]
+  containerVersion = "8.0"
+  entryPoint = ""
+  logTypeCode = "vm"
+  provisionType = { code = "equinixmetal" }
+  repositoryImage = ""
+  serverType = "vm"
+  shortName = "equinix-metal-vmware-esxi-8.0-vcf"
+  statTypeCode = "vm"
+  virtualImage = { code = "equinixmetal.image.os.vmware_esxi_8_0_vcf" }
+}
