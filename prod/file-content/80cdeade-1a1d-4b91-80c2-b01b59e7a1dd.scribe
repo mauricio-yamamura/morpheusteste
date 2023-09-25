@@ -1,0 +1,95 @@
+resource "file-content" "80cdeade-1a1d-4b91-80c2-b01b59e7a1dd" {
+  uuid = "80cdeade-1a1d-4b91-80c2-b01b59e7a1dd"
+  content = <<EOFSCRIBE
+#!/bin/bash
+
+#*******************************************
+#Task shell - Equinix - CM - Linux - Zabbix - Install
+#code: cm-linux-zabbix-install-V1.0
+#Objetivo: Instalacao do agente Zabbix atraves de script shell
+#Historico:
+#Looonar/MSY -17/11/2022 - Versao Inicial
+#********************************************
+
+#------------------------------------------------------
+function download_red_centos()
+#------------------------------------------------------
+{
+if ! which wget;
+then echo "Instalando wget"
+yum install wget
+fi
+}
+
+#------------------------------------------------------
+function download_ubuntu_debian()
+#------------------------------------------------------
+{
+if ! which wget;
+then echo "Instalando wget"
+apt-get install wget
+fi
+}
+
+
+#------------------------------------------------------
+function download_suse()
+#------------------------------------------------------
+{
+if ! which wget;
+then echo "Instalando wget"
+zypper install wget    
+fi
+
+}
+
+#------------------------------------------------------
+function Verifica_wget()
+#------------------------------------------------------
+{
+if [[ $(cat /etc/redhat-release) == *"Red Hat"* ]];
+then 	echo !! 1 !!  OS Distribution determined as Red Hat Enterprise Linux	
+	download_red_centos
+
+elif [[ $(cat /etc/redhat-release) == *"CentOS"*  ]]
+	then echo !! 1 !!  OS Distribution determined as CentOS Linux	
+	download_red_centos
+
+elif [[ $(cat /etc/*release*) == *"Amazon Linux"*  ]]
+    then echo !! 1 !!  OS Distribution determined as Amazon Linux        
+    download_red_centos
+
+elif [[ $(cat /etc/*release*) == *"ubuntu"* ]];
+	then echo !! 1 !! OS Distribution determined as Ubuntu Linux	
+    download_ubuntu_debian 
+
+elif [[ $(cat /etc/*release*) == *"debian"* ]];
+	then echo !! 1 !! OS Distribution determined as Debian Linux	
+    download_ubuntu_debian
+
+elif [[ $(cat /etc/*release*) == *"SUSE"* ]];
+	then echo !! 1 !! OS Distribution determined as SUSE Linux	
+	download_suse
+
+else echo :-/ Failed at Step 1 : We"'"re Sorry. This script cannot be used for zabbix-agent installation on this machine && exit 0
+fi
+
+}
+
+echo "Nome do Host: <%=customOptions.hostname%>"
+
+echo Starting Zabbix-Agent Download Script
+echo ========================================================================
+echo Step 1 = Determining OS Distribution Type
+Verifica_wget
+echo Obtendo script do archives
+file_url="<%= archives.link('EquinixPublicFiles', 'cm-linux-zabbix-script.sh', 1200) %>"
+wget --no-check-certificat $file_url -O "./cm-linux-zabbix-script.sh" 
+echo Download concluido
+chmod +x ./cm-linux-zabbix-script.sh
+./cm-linux-zabbix-script.sh "<%=customOptions.hostname%>"
+
+EOFSCRIBE
+  dateCreated = "2023-08-15T00:41:26.000Z"
+  lastUpdated = "2023-08-15T00:41:26.000Z"
+}

@@ -1,0 +1,17 @@
+resource "task" "cm-linux-zabbix-install-V1.0" {
+  code = "cm-linux-zabbix-install-V1.0"
+  name = "Equinix - CM - Linux - Zabbix - Install"
+  uuid = "0dc8aa51-bd9d-4d11-b42c-12126514fb50"
+  allowCustomConfig = true
+  dateCreated = "2023-08-15T00:41:26.000Z"
+  executeTarget = "resource"
+  lastUpdated = "2023-08-15T00:45:17.000Z"
+  options = [
+    { optionType = { code = "shell.sudo" }, value = "on" },
+    {
+      content = { uuid = "80cdeade-1a1d-4b91-80c2-b01b59e7a1dd" }
+      optionType = { code = "script" }
+    }
+  ]
+  taskType = { code = "script" }
+}
