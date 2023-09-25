@@ -1,0 +1,15 @@
+resource "container-type" "f06919bc-ba12-4d40-94d1-272d8a9a0ea5" {
+  code = "f06919bc-ba12-4d40-94d1-272d8a9a0ea5"
+  name = "Equinix Metal Rocky Linux 8"
+  uuid = "f9cb6d2a-8733-49d1-9ac5-7f6e9efbb866"
+  actions = [ { code = "generic-remove-node" } ]
+  containerVersion = "8"
+  entryPoint = ""
+  logTypeCode = "vm"
+  provisionType = { code = "equinixmetal" }
+  repositoryImage = ""
+  serverType = "vm"
+  shortName = "equinix-metal-rocky-linux-8"
+  statTypeCode = "vm"
+  virtualImage = { code = "equinixmetal.image.os.rocky_8" }
+}
