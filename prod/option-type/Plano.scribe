@@ -1,0 +1,12 @@
+resource "option-type" "Plano" {
+  code = "Plano"
+  name = "CP - Planos"
+  uuid = "ff89a989-6eb1-4da8-9c27-d7d5b74591bf"
+  dependsOnCode = "Cloud"
+  fieldContext = "config.customOptions"
+  fieldLabel = "Planos"
+  fieldName = "Plano"
+  optionList = { name = "CP - Planos via REST" }
+  optionSource = "list"
+  type = "select"
+}

@@ -1,0 +1,13 @@
+resource "option-type-list" "CP - Planos via REST" {
+  name = "CP - Planos via REST"
+  uuid = "71526044-d148-49a4-a4ac-170c9e5f7f4b"
+  config = "{\"sourceHeaders\":[{\"name\":\"Content-Type\",\"value\":\"application/json\",\"masked\":false},{\"name\":\"Authorization\",\"value\":\"Bearer f227259f-e68e-48e9-a6c9-4d26f032c603\",\"masked\":false}]}"
+  ignoreSSLErrors = true
+  realTime = true
+  sourceUrl = "https://morpheus-dev.loonar.dev/api/service-plans?provisionType=7"
+  translationScript = <<EOFSCRIBE
+for(var x=0;x < data.servicePlans.length; x++) {
+  results.push({name: data.servicePlans[x].name,value:data.servicePlans[x].id});
+}
+EOFSCRIBE
+}
