@@ -1,0 +1,13 @@
+resource "option-type" "metalplan" {
+  code = "metalplan"
+  name = "Metal - Planos"
+  uuid = "e51e7336-13ec-46dd-b449-94653ec8999c"
+  dependsOnCode = "metalmetro"
+  fieldContext = "config.customOptions"
+  fieldLabel = "Plano"
+  fieldName = "metalplan"
+  optionList = { name = "Metal Planos" }
+  optionSource = "list"
+  required = true
+  type = "select"
+}
