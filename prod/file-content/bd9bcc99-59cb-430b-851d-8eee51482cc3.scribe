@@ -1,0 +1,443 @@
+resource "file-content" "bd9bcc99-59cb-430b-851d-8eee51482cc3" {
+  uuid = "bd9bcc99-59cb-430b-851d-8eee51482cc3"
+  content = <<EOFSCRIBE
+/*******************************************
+Task Groovy - Equinix - CM - All - Zabbix - Install
+code: cm-all-zabbix-install-V1.0
+customOptions: Hostname
+Objetivo: Task que identifica versao do SO e executa a task de instalacao
+Historico:
+Looonar/MSY -17/11/2022 - Versao Inicial
+********************************************/
+
+import groovy.util.logging.Slf4j 
+import groovy.json.JsonSlurper 
+import groovy.json.JsonBuilder
+import com.morpheusdata.core.util.*
+
+@Slf4j
+/*********************************************************************************/
+class Log {
+/*********************************************************************************/
+    def info(Linha) {
+        log.info Linha		                                   
+    }
+}
+
+/*********************************************************************************/
+def ConfigurarServerZabbix(def log, def HeaderMsg, String hostname, String ip, def ApenasVerifica)
+/*********************************************************************************/
+{
+  def ZabbixUrl = "https://zbxapibr.equinix.com.br"
+  def ZabbixUsername = "apimorpheus"
+  def ZabbixPassword = "aPHb^h7o2212BkP"
+  def ZabbixToken ="";
+  def NomeTemplate = ""
+  def TipoServidor=""
+  
+  println server.osType
+
+  if (! ip)
+    ip = instance.internalIp
+  
+  if (!ip)
+    ip = server.externalIp
+
+  if (!ip)
+    ip = instance.externalIp
+
+  if (server.osType.toLowerCase().indexOf("windows")<0)
+  {
+    TipoServidor='Linux'
+    NomeTemplate = "TEMPLATE.TM_LINUX_BASICO"
+  }
+  else
+  {
+    TipoServidor='Windows'
+    NomeTemplate = "TEMPLATE.TM_WINDOWS_BASICO"
+  } 
+
+  //----------------------------------------------
+  //  Obtem ZabbixToken
+  //----------------------------------------------
+  String Body='{\n'+
+    '"jsonrpc": "2.0",\n'+
+    '"method": "user.login",\n'+
+    '"params": {\n'+
+    '    "user": "'+ZabbixUsername+'",\n'+
+    '    "password": "'+ZabbixPassword+'"\n'+
+    '},\n'+
+    '"id": 1\n'+
+    '}'
+  RestApiUtil.RestOptions requestOpts = new RestApiUtil.RestOptions(headers:[contentType: 'application/json-rpc'],body:Body)
+  def authResults = RestApiUtil.callJsonApi(ZabbixUrl,"/zabbix/api_jsonrpc.php",null,null, requestOpts ,'POST')
+  
+  if (authResults.success && authResults.data.result)
+  {
+    ZabbixToken = authResults.data.result
+    println HeaderMsg+"Obteve token Zabbix com sucesso"
+    log.info( HeaderMsg+"Obteve token Zabbix com sucesso")
+  }
+  else
+  {
+    println HeaderMsg+"Erro obtendo token Zabbix: ${authResults}"
+    log.info(HeaderMsg+"Erro obtendo token Zabbix: ${authResults}")
+    throw new Exception(HeaderMsg+"Erro obtendo token Zabbix: ${authResults}")
+  }
+
+  //----------------------------------------------
+  //  Verifica se Host ja nao existe
+  //----------------------------------------------
+  Body ='{\n'+
+    '"jsonrpc": "2.0",\n'+
+    '"method": "host.get",\n'+
+    '"params": {\n'+
+    '    "output": "extend",\n'+
+    '    "filter": {\n'+
+    '       "host": [\n'+
+    '            "'+hostname+'"\n'+
+    '        ]\n'+
+    '    }\n'+
+    '},\n'+
+    '"auth": "'+ZabbixToken+'",\n'+
+    '"id": 1\n'+
+    '}'
+  requestOpts = new RestApiUtil.RestOptions(headers:[contentType: 'application/json-rpc'],body:Body)
+  def HostResults = RestApiUtil.callJsonApi(ZabbixUrl,"/zabbix/api_jsonrpc.php",null,null, requestOpts ,'POST')
+  
+  if (HostResults.success && HostResults.data.result && HostResults.data.result.size()>0)
+  {
+    println HeaderMsg+"Ja existe host ${hostname} cadastrado no Zabbix"
+    log.info(HeaderMsg+"Ja existe host ${hostname} cadastrado no Zanbix")
+    return true
+  }
+
+  if (ApenasVerifica)
+  {
+    println HeaderMsg+"Nao foi localizado cadastrado do hostname ${hostname} no Zabbix Server"
+    log.info(HeaderMsg+"Nao foi localizado cadastrado do hostname ${hostname} no Zabbix Server")
+    return false
+  }
+
+  //----------------------------------------------
+  //  Obtem Templates
+  //----------------------------------------------
+  Body ='{\n'+
+    '"jsonrpc": "2.0",\n'+
+    '"method": "template.get",\n'+
+    '"params": {\n'+
+    '    "output": "extend",\n'+
+    '    "filter": {\n'+
+    '       "host": [\n'+
+    '            "'+NomeTemplate+'"\n'+
+    '        ]\n'+
+    '    }\n'+
+    '},\n'+
+    '"auth": "'+ZabbixToken+'",\n'+
+    '"id": 1\n'+
+    '}'
+  requestOpts = new RestApiUtil.RestOptions(headers:[contentType: 'application/json-rpc'],body:Body)
+  def templateResults = RestApiUtil.callJsonApi(ZabbixUrl,"/zabbix/api_jsonrpc.php",null,null, requestOpts ,'POST')
+
+  if (templateResults.success && templateResults.data.result)
+  {                  
+      def jsonTemplate =  templateResults.data.result.find {x -> x.name==NomeTemplate}
+      if (jsonTemplate)
+      {
+       idTemplate = jsonTemplate.templateid
+       println HeaderMsg+"Template: ${NomeTemplate} id:${idTemplate}"
+       log.info(HeaderMsg+"Template: ${NomeTemplate} id:${idTemplate}")
+      }
+      else
+      {
+        println HeaderMsg+"Nao identificou id do template ${NomeTemplate} Body:${Body}"
+        log.info(HeaderMsg+"Nao identificou id do template ${NomeTemplate} Body:${Body}")
+        throw new Exception(HeaderMsg+"Nao identificou id do template ${NomeTemplate} Body:${Body}")
+      }
+  }
+  else
+  {
+    println HeaderMsg+"Erro obtendo templates Zabbix: ${templateResults}"
+    log.info(HeaderMsg+"Erro obtendo templates Zabbix: ${templateResults}")
+    throw new Exception(HeaderMsg+"Erro obtendo templates Zabbix: ${templateResults}")
+  }
+
+
+  //----------------------------------------------
+  //  Cadastra hostname
+  //----------------------------------------------
+  Body='{\n'+
+   '        "jsonrpc": "2.0",\n'+
+   '        "method": "host.create",\n'+
+   '        "params": {\n'+
+   '            "host": "'+hostname+'",\n'+
+   '            "interfaces": [\n'+
+   '                {\n'+
+   '                    "type": 1,\n'+
+   '                    "main": 1,\n'+
+   '                    "useip": 1,\n'+
+   '                    "ip": "'+ip+'",\n'+
+   '                    "dns": "",\n'+
+   '                    "port": "10050"\n'+
+   '                }\n'+
+   '            ],\n'+
+   '            "groups": [\n'+
+   '                {\n'+
+   '                    "groupid": "6"\n'+
+   '                }\n'+
+   '            ],\n'+
+   '            "tags": [\n'+
+   '                {\n'+
+   '                    "tag": "Host name",\n'+
+   '                    "value": "'+TipoServidor+' server"\n'+
+   '                }\n'+
+   '            ],\n'+
+   '            "templates": [\n'+
+   '                {\n'+
+   '                    "templateid": "'+idTemplate+'"\n'+
+   '                }\n'+
+   '            ],\n'+
+   '            "inventory_mode": 0\n'+
+   '        },\n'+
+   '        "auth": "'+ZabbixToken+'",\n'+
+   '        "id": 1\n'+
+   '    }'
+
+  requestOpts = new RestApiUtil.RestOptions(headers:[contentType: 'application/json-rpc'],body:Body)
+  def createResults = RestApiUtil.callJsonApi(ZabbixUrl,"/zabbix/api_jsonrpc.php",null,null, requestOpts ,'POST')
+  if (createResults.success && createResults.data.result && createResults.data.result.hostids && createResults.data.result.hostids.size()>0)
+  {
+    println HeaderMsg+"Zabbix Server atualizado com sucesso. hostId: ${createResults.data.result.hostids[0]}"
+    log.info(HeaderMsg+"Zabbix Server atualizado com sucesso. hostId: ${createResults.data.result.hostids[0]}")
+    return true
+  }
+  else
+  {
+    println HeaderMsg+"Erro atualizando Zabbix Server com hostname ${hostname}: ${createResults}  body:${Body}"
+    log.info(HeaderMsg+"Erro atualizando Zabbix Server com hostname ${hostname}: ${createResults}  body:${Body}")
+    /* TESTE
+    throw new Exception(HeaderMsg+"Erro atualizando Zabbix Server com hostname ${hostname}: ${createResults}  body:${Body}")
+    */
+    return true
+  }
+}
+
+/*********************************************************************************/
+def LinuxAgenteZabbixInstalado(def log,def HeaderMsg,Long idServer)
+/*********************************************************************************/
+{
+  boolean Instalado=false
+
+  RestApiUtil.RestOptions requestOpts = new RestApiUtil.RestOptions(headers:['Authorization':'Bearer '+morpheus.apiAccessToken,contentType: 'application/json'])
+  def syncResults = RestApiUtil.callJsonApi(morpheus.applianceUrl,"/api/servers/${idServer}/software/sync",null,null, requestOpts ,'PUT')
+  if (!syncResults.success)
+  {
+    println HeaderMsg+"Erro solicitando sync de softwares:${syncResults}"
+    log.info(HeaderMsg+"Erro solicitando sync de softwares:${syncResults}")    
+  }
+
+  sleep(3000)
+  RestApiUtil.RestOptions requestTask = new RestApiUtil.RestOptions(
+          headers:['Authorization':'Bearer '+morpheus.apiAccessToken,contentType: 'application/json'],
+          queryParams:["phrase":"zabbix-agent"])
+  def results = RestApiUtil.callJsonApi(morpheus.applianceUrl,"/api/servers/${idServer}/software",null,null, requestTask ,'GET')
+
+  if (results.success && results.data.software.size()>0)
+  {
+    println HeaderMsg+"Localizou agente"
+    log.info(HeaderMsg+"Localizou agente")
+    Instalado=true
+  }
+  else
+  {
+    println HeaderMsg+"Nao localizou agente: ${results}"
+    log.info(HeaderMsg+"Nao localizou agente")
+  }
+
+  return Instalado
+}
+
+/*********************************************************************************/
+def WindowsAgenteZabbixInstalado(def log,def HeaderMsg,def server,def MaxTentativas)
+/*********************************************************************************/
+{
+  //-----------------------------------------------------
+  // Localiza Task que verifica se servico existe
+  //-----------------------------------------------------
+  String TaskWindowsService = "Equinix - CM - Windows - Zabbix - Exists"
+  RestApiUtil.RestOptions requestOpts = new RestApiUtil.RestOptions(
+        headers:['Authorization':'Bearer '+morpheus.apiAccessToken, contentType: 'application/json'],
+        queryParams:["phrase":TaskWindowsService])
+  def taskResults = RestApiUtil.callJsonApi(morpheus.applianceUrl,"/api/tasks",null,null, requestOpts ,'GET')
+  if (!taskResults.success || taskResults.data.tasks.size()==0)
+  {
+    println HeaderMsg+"Erro obtendo task ${TaskWindowsService}: ${taskResults.data}"
+    log.info(HeaderMsg+"Erro obtendo task ${TaskWindowsService}: ${taskResults.data}")
+    throw new Exception(HeaderMsg+"Erro obtendo task ${TaskWindowsService}: ${taskResults.data}")
+  }
+
+  String Body = '{\n'+
+      '"job": {\n'+
+      '     "instances": ['+instance.id+'],\n'+
+      '     "targetType": "instance"}}'
+  
+  //-----------------------------------------------------
+  // Executa Task que verifica se servico Zabbix existe
+  //-----------------------------------------------------
+  RestApiUtil.RestOptions execOpts = new RestApiUtil.RestOptions(headers:['Authorization':'Bearer '+morpheus.apiAccessToken], contentType:'application/json', body:Body)
+  def execResults = RestApiUtil.callJsonApi(morpheus.applianceUrl,"/api/tasks/${taskResults.data.tasks[0].id}/execute",null,null, execOpts ,'POST')
+  if (!execResults.success)
+  {
+    println HeaderMsg+"Erro executando task  ${taskResults.data.tasks[0].id}: ${execResults}"
+    log.info(HeaderMsg+"Erro executando task  ${taskResults.data.tasks[0].id}: ${execResults}")
+    throw new Exception(HeaderMsg+"Erro executando task  ${taskResults.data.tasks[0].id}: ${execResults}")
+  }
+  
+  //-----------------------------------------------------
+  // Monitora execucao da task
+  //-----------------------------------------------------
+  println HeaderMsg+"Monitorando Job:${execResults.data.jobExecution.id}"
+  def jobResults
+  def jobExecutado=false
+  def Tentativas=1
+  def ResultadoJob=false
+  RestApiUtil.RestOptions monitorOpts = new RestApiUtil.RestOptions(headers:['Authorization':'Bearer '+morpheus.apiAccessToken], contentType:'application/json')
+  sleep(2000)
+  while (! jobExecutado && Tentativas<=MaxTentativas)
+  {
+    println HeaderMsg+"Tentativa ${Tentativas} de ${MaxTentativas} verificando se Job finalizou"
+    log.info(HeaderMsg+"Tentativa ${Tentativas} de ${MaxTentativas} verificando se Job finalizou")
+    jobResults = RestApiUtil.callJsonApi(morpheus.applianceUrl,"/api/job-executions/${execResults.data.jobExecution.id}",null,null, monitorOpts ,'GET')
+    if (jobResults.success)
+    {
+      if (jobResults.data.jobExecution.process && jobResults.data.jobExecution.process.status)
+      {
+        println HeaderMsg+"Verificando status: ${jobResults.data.jobExecution.process.status} events.size:${jobResults.data.jobExecution.process.events.size()} output:${jobResults.data.jobExecution.process.events[0].output}"
+        log.info(HeaderMsg+"Verificando status: ${jobResults.data.jobExecution.process.status} events.size:${jobResults.data.jobExecution.process.events.size()} output:${jobResults.data.jobExecution.process.events[0].output}")
+        if (jobResults.data.jobExecution.process.status.toString()=="complete" && jobResults.data.jobExecution.process.events.size()>0)
+        {
+          jobExecutado=true
+          ResultadoJob = (jobResults.data.jobExecution.process.events[0].output.indexOf("1")>=0)
+        }
+      }            
+    }
+    if (! jobExecutado)
+    {
+      println HeaderMsg+"Aguardando 2s para nova verificacao ${jobResults}"
+      log.info(HeaderMsg+"Aguardando 2s para nova verificacao ${jobResults}")
+      sleep(1000)
+    }
+    Tentativas++ 
+  }
+
+  println HeaderMsg+"Monitorando execucao da Task ${ResultadoJob}"
+  log.info(HeaderMsg+"Monitorando execucao da Task ${ResultadoJob}")
+  return ResultadoJob
+}
+
+
+/*********************************************************************************/
+def AgenteZabbixInstalado(def log,def HeaderMsg,def server,def MaxTentativas)
+/*********************************************************************************/
+{
+  if (server.powerState=="off")
+  {
+    println HeaderMsg+"Necessario que a VM esteja ligada para instalar o agente"
+    log.info(HeaderMsg+"Necessario que a VM esteja ligada para instalar o agente")
+    throw new Exception(HeaderMsg+"Necessario que a VM esteja ligada para instalar o agente")
+  }
+
+  if (server.osType.toLowerCase().indexOf("windows")==-1)
+  {
+    println HeaderMsg+"Verificar Agente Zabbix - Linux"
+    log.info(HeaderMsg+"Verificar Agente Zabbix - Linux")
+    return LinuxAgenteZabbixInstalado(log,HeaderMsg,server.id)
+  }
+  else
+  {
+    println HeaderMsg+"Verificar Agente Zabbix - Windows"
+    log.info(HeaderMsg+"Verificar Agente Zabbix - Windows")
+    return WindowsAgenteZabbixInstalado(log,HeaderMsg,server,MaxTentativas)
+  }
+}
+
+/***********************************************************************************/
+
+def log = new Log()
+def HeaderMsg = "[task_zabbix_${instance.id}]"
+def headers = ['Authorization':'Bearer '+morpheus.apiAccessToken]
+def CypherAccessItem = "secret/ServerCredentials"
+RestApiUtil.RestOptions requestOpts = new RestApiUtil.RestOptions(headers:['Authorization':'Bearer '+morpheus.apiAccessToken,contentType: 'application/json'])
+
+/*********************************************************************************/
+/*                          INICIO PROCESSAMENTO                                 */
+/*********************************************************************************/
+println HeaderMsg+"Inicio Processsamento Zabbix Agente Install"
+log.info(HeaderMsg+"Inicio Processsamento Zabbix Agente Install")	
+
+//------ Nome do Hostname
+def TenantName = account.replace(" ","")
+if (TenantName.length()>10)
+  TenantName = TenantName.substring(0,10)
+
+def Hostname = "cmp-"+String.format( "%05d", server.id)+"-"+TenantName+"-"+server.name.replace(" ","")
+if (Hostname.length()>64)
+  Hostname = Hostname.substring(0,64)
+
+if (server.powerState=="off")
+{
+  println HeaderMsg+"Necessario que a VM esteja ligada para instalar o agente"
+  log.info(HeaderMsg+"Necessario que a VM esteja ligada para instalar o agente")
+  throw new Exception(HeaderMsg+"Necessario que a VM esteja ligada para instalar o agente")
+}
+
+if (customOptions.forceReinstall != "on")
+{
+  if (AgenteZabbixInstalado(log,HeaderMsg,server,3))
+  {
+    println HeaderMsg+"Identificado que o Zabbix Agente instalado"
+    log.info(HeaderMsg+"Identificado que o Zabbix Agente instalado")
+    return
+  }
+}
+
+String TaskZabbix=""
+if (server.osType.toLowerCase().indexOf("windows")==-1)
+  TaskZabbix="Equinix - CM - Linux - Zabbix - Install"
+else
+  TaskZabbix="Equinix - CM - Windows - Zabbix - Install"
+
+//----- Localiza a Task
+RestApiUtil.RestOptions requestTask = new RestApiUtil.RestOptions(
+        headers:['Authorization':'Bearer '+morpheus.apiAccessToken,contentType: 'application/json'],
+        queryParams:["phrase":TaskZabbix])
+def taskResults = RestApiUtil.callJsonApi(morpheus.applianceUrl,"/api/tasks",null,null, requestTask ,'GET')
+if (!taskResults.success || taskResults.data.tasks.size()==0)
+{
+  println HeaderMsg+"Erro obtendo task ${TaskZabbix}: ${taskResults.data}"
+  log.info(HeaderMsg+"Erro obtendo task ${TaskZabbix}: ${taskResults.data}")
+  throw new Exception(HeaderMsg+"Erro obtendo task ${TaskZabbix}: ${taskResults.data}")
+}
+
+String Body = '{\n'+
+     '"job": {\n'+
+     '     "instances": ['+instance.id+'],\n'+
+     '     "customOptions": {"hostname": "'+Hostname+'"},\n'+
+     '     "targetType": "instance"}}'
+
+//------ Executa task
+RestApiUtil.RestOptions execOpts = new RestApiUtil.RestOptions(headers:headers, contentType:'application/json', body:Body)
+def execResults = RestApiUtil.callJsonApi(morpheus.applianceUrl,"/api/tasks/${taskResults.data.tasks[0].id}/execute",null,null, execOpts ,'POST')
+
+if (!execResults.success)
+{
+  println HeaderMsg+"Erro executando task ${taskResults.data.tasks[0].id}: ${execResults.data} Body:${Body}"
+  log.info(HeaderMsg+"Erro executando task ${taskResults.data.tasks[0].id}: ${execResults.data} Body:${Body}")
+  throw new Exception(HeaderMsg+"Erro executando task ${taskResults.data.tasks[0].id}: ${execResults.data}")
+}
+
+
+EOFSCRIBE
+  dateCreated = "2023-08-15T00:40:28.000Z"
+  lastUpdated = "2023-08-15T00:40:28.000Z"
+}
