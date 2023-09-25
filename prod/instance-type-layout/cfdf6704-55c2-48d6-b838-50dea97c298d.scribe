@@ -1,0 +1,10 @@
+resource "instance-type-layout" "cfdf6704-55c2-48d6-b838-50dea97c298d" {
+  code = "cfdf6704-55c2-48d6-b838-50dea97c298d"
+  name = "Equinix Metal Flatcar Linux - Stable"
+  uuid = "b9906ef4-0472-456a-8657-fdf5d7c44deb"
+  actions = [ { code = "generic-add-node" } ]
+  instanceType = { code = "flatcar" }
+  instanceVersion = "1.0"
+  provisionType = { code = "equinixmetal" }
+  workloads = [ { code = "08554456-5a89-4f7f-9f43-ef08f9d0e704" } ]
+}
