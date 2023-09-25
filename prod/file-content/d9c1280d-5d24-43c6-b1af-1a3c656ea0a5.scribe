@@ -1,0 +1,71 @@
+resource "file-content" "d9c1280d-5d24-43c6-b1af-1a3c656ea0a5" {
+  uuid = "d9c1280d-5d24-43c6-b1af-1a3c656ea0a5"
+  content = <<EOFSCRIBE
+/*******************************************
+Task Groovy - Equinix - BareMetal - Install Agent Morpheus
+code: baremetal-install-morpheus
+Objetivo: Instalacao do agente Morpheus atraves de Rest/API Morpheus
+Historico:
+Looonar/MSY -17/11/2022 - Versao Inicial
+********************************************/
+
+import groovy.util.logging.Slf4j 
+import groovy.json.JsonSlurper 
+import groovy.json.JsonBuilder
+import com.morpheusdata.core.util.*
+
+@Slf4j
+/*********************************************************************************/
+class Log {
+/*********************************************************************************/
+    def info(Linha) {
+        log.info Linha		                                   
+    }
+}
+
+
+/*********************************************************************************/
+def InstallAgent(def HeaderMsg,def log,Long idServer, String sshUsername, String sshPassword)
+/*********************************************************************************/
+{
+    String Body=""
+    if (sshUsername!="")
+    {
+        Body = '{\n'+
+        '  "server": {\n'+
+        '  "sshUsername": "'+sshUsername+'"\n'+
+        '}}'
+    }
+    String Bearer = 'Bearer '+morpheus.getApiAccessToken()
+    Bearer = 'Bearer f227259f-e68e-48e9-a6c9-4d26f032c603'
+
+
+    RestApiUtil.RestOptions requestOpts = new RestApiUtil.RestOptions(headers:['Authorization':Bearer], contentType: 'application/json', body:Body)
+    def results =  RestApiUtil.callJsonApi(morpheus.applianceUrl,'/api/servers/'+server.id+'/install-agent',null,null, requestOpts ,'PUT')
+    println HeaderMsg+"Executando endpoint install-agent: ${results}" 
+    if (! results.success)
+    {
+      println HeaderMsg+"Erro executando endpoint install-agent: ${results}" 
+      log.info(HeaderMsg+"Erro executando endpoint install-agent: ${results}" )
+      return false  
+    }
+    else return true
+}
+
+
+/*********************************************************************************/
+/*                          INICIO PROCESSAMENTO                                 */
+/*********************************************************************************/
+def log = new Log()
+def HeaderMsg = "[task_morpheus_${instance.id}]"
+def headers = ['Authorization':'Bearer '+morpheus.getApiAccessToken()]
+RestApiUtil.RestOptions requestOpts = new RestApiUtil.RestOptions(headers:headers, contentType: 'application/json')
+
+println HeaderMsg+"Executando a instalacao do agente Morpheus - Usuario root server.id:${instance.container.server.id}"
+log.info(HeaderMsg+"Executando a instalacao do agente Morpheus - Usuario root server.id:${instance.container.server.id}")
+InstallAgent(HeaderMsg,log,instance.container.server.id,'root','')
+
+EOFSCRIBE
+  dateCreated = "2023-07-25T17:19:58.000Z"
+  lastUpdated = "2023-07-26T11:38:34.000Z"
+}

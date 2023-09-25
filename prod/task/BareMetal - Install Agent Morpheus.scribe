@@ -1,0 +1,15 @@
+resource "task" "BareMetal - Install Agent Morpheus" {
+  name = "BareMetal - Install Agent Morpheus"
+  uuid = "fda2a5b0-ddce-4950-94c9-634e6037d5c4"
+  dateCreated = "2023-07-25T17:19:58.000Z"
+  executeTarget = "local"
+  lastUpdated = "2023-07-26T11:43:58.000Z"
+  options = [
+    {
+      content = { uuid = "d9c1280d-5d24-43c6-b1af-1a3c656ea0a5" }
+      optionType = { code = "groovyScript" }
+    }
+  ]
+  taskType = { code = "groovyTask" }
+  visibility = "public"
+}
