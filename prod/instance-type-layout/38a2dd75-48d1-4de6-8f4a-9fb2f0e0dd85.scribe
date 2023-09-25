@@ -1,0 +1,10 @@
+resource "instance-type-layout" "38a2dd75-48d1-4de6-8f4a-9fb2f0e0dd85" {
+  code = "38a2dd75-48d1-4de6-8f4a-9fb2f0e0dd85"
+  name = "Equinix Metal Windows 2022 Standard"
+  uuid = "53cd8382-b2d8-486b-9511-96d01495dad8"
+  actions = [ { code = "generic-add-node" } ]
+  instanceType = { code = "windows" }
+  instanceVersion = "2022"
+  provisionType = { code = "equinixmetal" }
+  workloads = [ { code = "6bbd52a3-ed54-4b97-92e0-baebe108f770" } ]
+}

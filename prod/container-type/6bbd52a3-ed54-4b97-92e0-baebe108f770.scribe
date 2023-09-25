@@ -1,0 +1,15 @@
+resource "container-type" "6bbd52a3-ed54-4b97-92e0-baebe108f770" {
+  code = "6bbd52a3-ed54-4b97-92e0-baebe108f770"
+  name = "Equinix Metal Windows 2022 Standard"
+  uuid = "b5ec4f04-da4f-41e5-bd06-b7d2c35572a5"
+  actions = [ { code = "generic-remove-node" } ]
+  containerVersion = "2022"
+  entryPoint = ""
+  logTypeCode = "vm"
+  provisionType = { code = "equinixmetal" }
+  repositoryImage = ""
+  serverType = "vm"
+  shortName = "equinix-metal-windows-2022-standard"
+  statTypeCode = "vm"
+  virtualImage = { code = "equinixmetal.image.os.windows_2022" }
+}
