@@ -8,5 +8,10 @@ resource "instance-type" "flatcar" {
   hasAutoScale = true
   hasDeployment = true
   hasSettings = true
+  layouts = [
+    { code = "468b3861-c139-4d12-9c5a-b2d8f258ad4c" },
+    { code = "578113e8-49a8-4b56-8bc6-2bca675b5a64" },
+    { code = "cfdf6704-55c2-48d6-b838-50dea97c298d" }
+  ]
   visibility = "public"
 }
