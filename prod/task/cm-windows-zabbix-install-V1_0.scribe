@@ -1,0 +1,17 @@
+resource "task" "cm-windows-zabbix-install-V1.0" {
+  code = "cm-windows-zabbix-install-V1.0"
+  name = "Equinix - CM - Windows - Zabbix - Install"
+  uuid = "dce96a11-a637-45fa-b267-e8d9cabefbdb"
+  allowCustomConfig = true
+  dateCreated = "2023-08-15T00:42:34.000Z"
+  executeTarget = "resource"
+  lastUpdated = "2023-08-15T00:44:45.000Z"
+  options = [
+    { optionType = { code = "winrm.elevated" }, value = "on" },
+    {
+      content = { uuid = "87ffb3df-7ace-4a00-829b-6b658d753aa9" }
+      optionType = { code = "script" }
+    }
+  ]
+  taskType = { code = "winrmTask" }
+}

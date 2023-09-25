@@ -1,0 +1,22 @@
+resource "file-content" "87ffb3df-7ace-4a00-829b-6b658d753aa9" {
+  uuid = "87ffb3df-7ace-4a00-829b-6b658d753aa9"
+  content = <<EOFSCRIBE
+#*******************************************
+#Task PowerShell - Equinix - CM - Windows - Zabbix - Install
+#code: cm-windows-zabbix-install-V1.0
+#Objetivo: Instalacao do agente Zabbix atraves de script powershell
+#Historico:
+#Looonar/MSY -17/11/2022 - Versao Inicial
+#********************************************
+
+if (-not  (Test-Path  'c:\zabbix')) {mkdir c:\zabbix}
+$allProtocols = [System.Net.SecurityProtocolType]'Ssl3,Tls,Tls11,Tls12'
+[System.Net.ServicePointManager]::SecurityProtocol = $allProtocols
+$file_url = "<%= archives.link('EquinixPublicFiles', 'cm-windows-zabbix-script.ps1', 1200) %>"
+Invoke-WebRequest $file_url -OutFile c:\zabbix\cm-windows-zabbix-script.ps1
+powershell -executionpolicy bypass c:\zabbix\cm-windows-zabbix-script.ps1 "<%=customOptions.hostname%>"
+
+EOFSCRIBE
+  dateCreated = "2023-08-15T00:42:34.000Z"
+  lastUpdated = "2023-08-15T00:42:34.000Z"
+}
