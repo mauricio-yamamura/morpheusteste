@@ -1,0 +1,340 @@
+resource "file-content" "f510419f-3db0-42ac-898e-14809bd64be2" {
+  uuid = "f510419f-3db0-42ac-898e-14809bd64be2"
+  content = <<EOFSCRIBE
+/*******************************************
+Task Groovy - BareMetal Sync Plans
+code: bm-sync-plans
+Objetivo: Sincroniza planos do Teant Master com Bare Metal
+Historico:
+Looonar/MSY -11/07/2023 - Versao Inicial
+********************************************/
+
+import groovy.util.logging.Slf4j 
+import groovy.json.JsonSlurper 
+import groovy.json.JsonBuilder
+import com.morpheusdata.core.util.HttpApiClient
+import com.morpheusdata.core.util.*
+
+@Slf4j
+/*********************************************************************************/
+class Log {
+/*********************************************************************************/
+   
+    def HeaderMsg = "[baremetal_sync_plan]"
+    def info(Linha) { 
+        log.info HeaderMsg+Linha		                                   
+    }
+}
+
+/*********************************************************************************/
+def restapi_Token(def log,def TenantId,def Username, def Password)
+/*********************************************************************************/
+{
+
+    if (TenantId!="")
+       Username = TenantId.toString()+"\\"+Username
+      
+    RestApiUtil.RestOptions getToken = new RestApiUtil.RestOptions(
+            headers:[contentType:'application/x-www-form-urlencoded'],
+            queryParams:["client_id":"morph-api", "grant_type":"password", "scope":"write", "username":Username, "password":Password]
+            )
+
+    def tokenResults = RestApiUtil.callJsonApi(morpheus.applianceUrl,'/oauth/token',null,null, getToken ,'POST')      
+
+    if (! tokenResults.success)
+    {
+        throw new Exception(log.HeaderMsg+"Não conseguiu criar token para o usuario ${Username} no Tenant ${TenantId}: ${tokenResults}")
+    }
+
+    TenantToken = tokenResults.data.access_token
+
+}
+
+/*********************************************************************************/
+def restapiDelete(def log,String TenantToken,String path,def QueryParams)
+/*********************************************************************************/
+{
+  if (TenantToken=="")
+    TenantToken = morpheus.apiAccessToken
+
+  if (!QueryParams)
+    QueryParams = [:]    
+
+  RestApiUtil.RestOptions requestOpts = new RestApiUtil.RestOptions(headers:['Authorization':'Bearer '+TenantToken], contentType: 'application/json',queryParams:QueryParams)
+  def results = RestApiUtil.callJsonApi(morpheus.applianceUrl,path,null,null, requestOpts ,'DELETE')
+  if (!results.success)
+  {
+    log.info("Erro deletando ${path}:${results}")
+    println "Erro deletando ${path}:${results}"
+    throw new Exception(log.HeaderMsg+"Erro deletando ${path}:${results}")
+  }
+  return results
+}
+
+
+/*********************************************************************************/
+def restapiGet(def log,String TenantToken,String path,def QueryParams)
+/*********************************************************************************/
+{
+  if (!QueryParams)
+    QueryParams = [max:"250"]
+
+  if (TenantToken=="")
+    TenantToken = morpheus.apiAccessToken
+
+  RestApiUtil.RestOptions requestOpts = new RestApiUtil.RestOptions(
+            headers:['Authorization':'Bearer '+TenantToken], 
+            contentType: 'application/json',
+            queryParams:QueryParams)
+  def results = RestApiUtil.callJsonApi(morpheus.applianceUrl,path,null,null, requestOpts ,'GET')
+  if (!results.success)
+  {
+    log.info("Erro consultando ${path}:${results}")
+  }
+  return results
+}
+
+/*********************************************************************************/
+def restapiPost(def log,String TenantToken,String path,def QueryParams,def Body)
+/*********************************************************************************/
+{
+
+  if (TenantToken=="")
+    TenantToken = morpheus.apiAccessToken
+
+  RestApiUtil.RestOptions requestOpts = new RestApiUtil.RestOptions(
+            headers:['Authorization':'Bearer '+TenantToken], 
+            contentType: 'application/json',
+            queryParams:QueryParams,
+            body:Body)
+  def results = RestApiUtil.callJsonApi(morpheus.applianceUrl,path,null,null, requestOpts ,'POST')
+  if (!results.success)
+  {
+    log.info("Erro executando ${path}:${results}")
+  }
+  return results
+}
+
+/*********************************************************************************/
+def internalGetApiRequest(def log,String apiKey, String path, Map queryParams=null, Map headers=null) {
+/*********************************************************************************/
+    internalApiRequest(log,apiKey, path, 'GET', null, queryParams, headers)
+}
+
+/*********************************************************************************/
+def  internalPaginatedGetApiRequest(def log,String apiKey, String path, String resultKey, Map queryParams=null, Map addHeaders=null) {    
+/*********************************************************************************/
+    List resultList = []
+    def pageNum = 1
+    def perPage = 10
+    def rtn
+    Map tmpQueryParams = [per_page: "${perPage}", page: "${pageNum}"]
+    if(queryParams) {
+        tmpQueryParams += queryParams
+    }
+    def theresMore = true
+    while (theresMore) {
+        tmpQueryParams.page = "${pageNum}"        
+        def  response = internalGetApiRequest(log,apiKey, path, tmpQueryParams, addHeaders)
+        log.info("internalPaginatedGetApiRequest path: $path response.success: $response.success  $response.msg")
+        if(response.success) {
+            rtn.success = true
+            resultList += response.data?."$resultKey" ?: []
+            theresMore = response.data?.links?.pages?.next ? true : false
+            pageNum++
+        } else {
+            theresMore = false
+            rtn.success = false
+            rtn.results = response.msg
+            rtn.errorCode = response.errors
+        }
+    }
+
+    if(rtn.success) {
+        rtn.data = [
+            (resultKey): resultList
+        ]
+    }
+    return rtn
+}
+
+/*********************************************************************************/
+def  internalApiRequest(def log,String apiKey, String path, String requestMethod='GET', Map body=null, Map queryParams=null, Map addHeaders=null) {    
+/*********************************************************************************/
+    String EQUINIX_METAL_ENDPOINT = 'https://api.equinix.com'
+    HttpApiClient apiClient = new HttpApiClient(throttleRate:500l)
+    def rtn
+    try {
+        HttpApiClient.RequestOptions requestOptions = new HttpApiClient.RequestOptions(contentType: 'application/json')
+        if(body) {
+            requestOptions.body = body
+        }
+        if(queryParams) {
+            requestOptions.queryParams = queryParams
+        }
+        requestOptions.headers = ['Accept':'application/json', 'ContentType':'application/json','X-Auth-Token': apiKey]
+        if(addHeaders) {
+            addHeaders.each {
+                requestOptions.headers[it.key] = it.value
+            }
+        }
+        log.info("executando ${EQUINIX_METAL_ENDPOINT}${path}")
+        rtn = apiClient.callJsonApi(EQUINIX_METAL_ENDPOINT, path, requestOptions, requestMethod)
+        log.info("Executado: ${rtn}")
+
+        // handle occasional "API failed to respond" issue, might be a local network issue or slow API, just try a again a few times
+        Integer attempts = 1;
+        if(rtn.success == false) {
+            Boolean noResponse = (rtn.success == false && rtn.getError()?.toLowerCase()?.contains("failed to respond"))
+            Boolean serviceUnavailable = (rtn.success == false && rtn.getErrorCode() == '503')
+            while((noResponse == true || serviceUnavailable == true) && attempts <= 5) {
+                log.info("API failed to respond, attempting to try again (attempt $attempts)")
+                rtn = apiClient.callJsonApi(EQUINIX_METAL_ENDPOINT, path, requestOptions, requestMethod)
+                noResponse = (rtn.success == false && rtn.getError()?.toLowerCase()?.contains("failed to respond"))
+                if(noResponse == true) {
+                    sleep(500l)
+                    if(attempts == 5) {
+                        log.info("API failed to respond after ${attempts} attempts, returning failed API response.")
+                    }
+                }
+                attempts++
+            }
+        }
+
+    } catch(e) {
+        throw new Exception(log.HeaderMsg+"error during api request ${path}: ${e}")
+    }
+    return rtn
+}
+
+/*********************************************************************************/
+def log = new Log()
+
+//--------------------
+//Lista Provision Type equinix
+def resultsProvisionType = restapiGet(log,"","/api/provision-types",[name:'EquinixMetal'])
+log.info("resultsProvisionType: ${resultsProvisionType.data.provisionTypes}")
+
+
+//Lista Prices do Morpheus
+def resultsPrices = restapiGet(log,"","/api/prices",[phrase:'Equinix Metal'])
+log.info("resultsPrices: ${resultsPrices.data}")
+
+//Lista Price-Sets do Morpheus
+def resultsPriceSets = restapiGet(log,"","/api/price-sets",[phrase:'Equinix Metal'])
+log.info("resultsPriceSets: ${resultsPriceSets.data}")
+
+//Lista Plans do Morpheus 
+log.info("provisionTypes[0].id: ${resultsProvisionType.data.provisionTypes[0].id.toString()}")
+def resultsServicePlans = restapiGet(log,"","/api/service-plans",[provisionTypeId:resultsProvisionType.data.provisionTypes[0].id.toString()])
+log.info("resultsServicePlans: ${resultsServicePlans.data}")
+
+//---------------------
+//Lista plans do Bare Metal
+String apiKeyMetal='ttioP5zMDp3C3jdhPpR7DsQGdjcbfdyF'
+def resultsPlans = internalGetApiRequest(log,apiKeyMetal, '/metal/v1/plans', null, null)
+//log.info("resultsPlans ${new JsonBuilder(resultsPlans).toPrettyString()}")
+
+def results
+def Body
+def idPrice
+def idPriceSet
+def idServicePlan
+for(plan in resultsPlans.data.plans)
+{
+    if (plan.available_in.size>0)
+    {
+      log.info("Analisando plano ${plan.slug}")
+
+      //Verifica se existe price      
+      if (!resultsPrices.data.prices.find{it.code=="equinixmetal."+plan.slug})
+      {
+        log.info("Incluir price")
+        Body=[
+            price:[
+                name:'Equinix Metal '+plan.slug,
+                code:'equinixmetal.'+plan.slug,
+                priceUnit:'hour',
+                price:plan.pricing.hour,
+                cost:plan.pricing.hour,
+                currency:'USD',
+                incurCharges:'always',
+                priceType: 'fixed'
+            ]
+        ]
+        results = restapiPost(log,"","/api/prices",[:],Body)
+        if (!results.success)
+          throw new Exception(log.HeaderMsg+"Erro inserindo preco ${Body}")
+        else idPrice=results.data.id
+      } 
+      else idPrice = resultsPrices.data.prices.find{it.code=="equinixmetal."+plan.slug}.id
+
+      //verifica se existe price-set
+      if (!resultsPriceSets.data.priceSets.find{it.code=="equinixmetal."+plan.slug})
+      {
+        log.info("Incluir price-set")
+        Body=[
+            priceSet:[
+                name:'Equinix Metal '+plan.slug,
+                code:'equinixmetal.'+plan.slug,
+                priceUnit:'hour',
+                type:'fixed',
+                prices:[[id:idPrice]]
+            ]
+        ]
+        results = restapiPost(log,"","/api/price-sets",[:],Body)
+        log.info("${results}")
+        if (!results.success)
+          throw new Exception(log.HeaderMsg+"Erro inserindo price-sets ${Body}")
+        else idPriceSet=results.data.id
+      }
+      else idPriceSet = resultsPriceSets.data.priceSets.find{it.code=="equinixmetal."+plan.slug}.id
+
+      //verifica se existe service-plan
+      if (!resultsServicePlans.data.servicePlans.find{it.code=="equinixmetal."+plan.slug})
+      {
+        String Cores = (plan.specs.cpus.size>0 && plan.specs.cpus[0]?.cores ? plan.specs.cpus[0]?.cores : "n/a")
+        Long Memory = Long.valueOf(plan.specs.memory ? plan.specs.memory.total.replace("GB","") : 0)*1024*1024*1024
+        Long Storage = Long.valueOf(plan.specs.drives.size > 0 ? plan.specs.drives[0].size.replace("GB",""): 0)*1024*1024*1024
+        String Descricao = "${plan.slug}, ${Cores} vCPU, ${Memory}GB Memory, ${Storage}GB Storage"
+        log.info("Incluir service-plan ${Descricao}")
+        Body=[
+            servicePlan:[
+                name:'Equinix Metal '+plan.slug,
+                code:'equinixmetal.'+plan.slug,
+                description:Descricao,
+                maxCores:Cores,
+                maxMemory:Memory.toString(),
+                maxStorage:Storage.toString(),
+                config:[
+                    storageSizeType: "gb",
+                    memorySizeType: "gb"
+                ],
+                provisionType:[
+                    id:resultsProvisionType.data.provisionTypes[0].id.toString()
+                ],
+                priceSets:[[id:idPriceSet]],
+                customCores:false,
+                customMaxStorage:false,
+                customMaxMemory:false,
+                addVolumes:false,
+                editable:false
+            ]
+        ]
+        log.info("${new JsonBuilder(Body).toPrettyString()}")
+                
+        results = restapiPost(log,"","/api/service-plans",[:],Body)
+        log.info("${results}")
+        if (!results.success)
+          throw new Exception(log.HeaderMsg+"Erro inserindo service-plans ${Body}")
+        
+      }
+
+    }
+}
+
+
+EOFSCRIBE
+  dateCreated = "2023-07-20T19:53:36.000Z"
+  lastUpdated = "2023-07-21T13:51:11.000Z"
+}

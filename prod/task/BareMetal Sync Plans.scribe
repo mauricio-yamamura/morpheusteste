@@ -1,0 +1,14 @@
+resource "task" "BareMetal Sync Plans" {
+  name = "BareMetal Sync Plans"
+  uuid = "0aa2f5e5-3898-4df8-865f-eec7f04ee065"
+  dateCreated = "2023-07-20T19:53:36.000Z"
+  executeTarget = "local"
+  lastUpdated = "2023-07-21T13:51:11.000Z"
+  options = [
+    {
+      content = { uuid = "f510419f-3db0-42ac-898e-14809bd64be2" }
+      optionType = { code = "groovyScript" }
+    }
+  ]
+  taskType = { code = "groovyTask" }
+}
