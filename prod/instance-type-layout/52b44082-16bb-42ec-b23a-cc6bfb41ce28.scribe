@@ -1,0 +1,9 @@
+resource "instance-type-layout" "52b44082-16bb-42ec-b23a-cc6bfb41ce28" {
+  code = "52b44082-16bb-42ec-b23a-cc6bfb41ce28"
+  name = "Equinix Metal RedHat Enterprise Linux 8"
+  uuid = "67af3a36-ea25-4770-93e9-4c68ce422725"
+  instanceType = { code = "rhel" }
+  instanceVersion = "8"
+  provisionType = { code = "equinixmetal" }
+  workloads = [ { code = "7485fb22-0be4-4fd7-987d-9c0810baf9b7" } ]
+}
