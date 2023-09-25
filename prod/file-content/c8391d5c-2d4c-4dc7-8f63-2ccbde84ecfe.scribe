@@ -1,0 +1,188 @@
+resource "file-content" "c8391d5c-2d4c-4dc7-8f63-2ccbde84ecfe" {
+  uuid = "c8391d5c-2d4c-4dc7-8f63-2ccbde84ecfe"
+  content = <<EOFSCRIBE
+/*******************************************
+Task Groovy - Equinix - CM - Azure - Zabbix - Install
+code:cm-azure-zabbix-install-V1.0
+Objetivo: Em VMs Azure (Windows/Linux), instalar agente Zabbix via RunCommand, apenas com as credenciais da Nuvem
+Historico:
+Loonar/MSY 23/10/2022: Versao inicial
+********************************************/
+import groovy.util.logging.Slf4j 
+import groovy.json.JsonSlurper 
+import groovy.json.JsonOutput
+import groovy.json.JsonBuilder
+import com.morpheusdata.core.util.*
+
+
+@Slf4j
+class Log {
+    def info(Linha) {        
+        log.info Linha		                                   
+    }
+}
+
+def log = new Log()
+def CypherAccessItem = 'secret/AzureCredentials'
+def HeaderMsg = "[task_azure_zabbix_${instance.id}]"
+def _tenant = ""
+def _accessKey = ""
+def _secretKey = ""
+
+log.info(HeaderMsg+"Inicio Processsamento")	
+
+//-------- Subscription da Instancia
+String subscription = server.uniqueId
+subscription = subscription.substring(subscription.indexOf("/",2)+1)
+subscription = subscription.substring(0,subscription.indexOf("/"))
+
+//-------- Informacoes pra acesso Rest/API
+def headers = ['Authorization':'Bearer '+morpheus.apiAccessToken]
+RestApiUtil.RestOptions requestOpts = new RestApiUtil.RestOptions(headers:headers, contentType: 'application/json')
+
+
+//----------------------------
+//    Obtem credenciais do Cypher                                                   
+//----------------------------
+println HeaderMsg+"Obtendo credenciais do Cypher no cadastro "+CypherAccessItem
+log.info(HeaderMsg+"Obtendo credenciais do Cypher no cadastro "+CypherAccessItem)	
+
+def resultCypher =cypher.read(CypherAccessItem)
+if (! resultCypher)
+{  
+  println HeaderMsg+"Nao localizou chave Cypher ${CypherAccessItem}"
+  log.info(HeaderMsg+"Nao localizou chave Cypher ${CypherAccessItem}")
+  throw new Exception(HeaderMsg+"Nao localizou chave Cypher ${CypherAccessItem}")	  
+}
+
+def JsonCredenciais = new JsonSlurper().parseText(resultCypher)
+def jsonCredencial = JsonCredenciais.find {x -> x.subscriptionId==subscription}
+if (jsonCredencial==null)
+{
+  println HeaderMsg+"Nao localizou credencial com Subscription "+subscription
+  log.info(HeaderMsg+"Nao localizou credencial com Subscription "+subscription)
+  throw new Exception(HeaderMsg+"Nao localizou credencial com Subscription "+subscription)	  
+}
+
+_tenant = jsonCredencial.tenant
+_accessKey = jsonCredencial.accessKey
+_secretKey = jsonCredencial.secretKey
+            
+/*************************************************************************************/
+/*    Obtem Token da Azure                                                           */
+/*************************************************************************************/
+log.info(HeaderMsg+"Obtendo token Azure")
+			
+def _body='grant_type=client_credentials&client_id='+_accessKey+'&client_secret='+_secretKey+'&resource=https%3A%2F%2Fmanagement.azure.com%2F'
+def HeaderToken = new RestApiUtil.RestOptions(headers:['Content-Type':'application/x-www-form-urlencoded'],body:_body)
+def resultToken = RestApiUtil.callJsonApi("https://login.microsoftonline.com/", _tenant+"/oauth2/token", "", "", HeaderToken, 'POST')
+
+if (resultToken.success)
+{
+  Token = 'Bearer '+resultToken.data.access_token
+  println HeaderMsg+"Token Azure atualizado"
+  log.info(HeaderMsg+"Token Azure atualizado")
+}
+else
+{
+  println HeaderMsg+"Erro obtendo token Azure: ${resultToken.data}"
+  log.info(HeaderMsg+"Erro obtendo token Azure: ${resultToken.data}")
+  throw new Exception(HeaderMsg+"Erro obtendo token Azure: ${resultToken.data}")	    
+}			
+
+/*************************************************************************************/
+/*    Instala agente Zabbix                                                          */
+/*************************************************************************************/
+def TenantName = account.replace(" ","")
+if (TenantName.length()>10)
+  TenantName = TenantName.substring(0,10)
+
+def Hostname = "cmp-"+String.format( "%05d", server.id)+"-"+TenantName+"-"+server.externalId.replace(" ","")
+if (Hostname.length()>64)
+  Hostname = Hostname.substring(0,64)
+
+/* Cria links temporarios dos scripts que estao salvos no Archives */
+def LinkScript = archives.link('EquinixPublicFiles', 'cm-windows-zabbix-script.ps1', 1200)
+
+if (server.osType=="linux")
+  LinkScript = archives.link('EquinixPublicFiles', 'cm-linux-zabbix-script.sh', 1200)
+
+log.info(HeaderMsg+"link script: ${LinkScript}")
+
+def ZabbixCommand= ["commandId": "RunPowerShellScript",
+     "script": [
+	     "if (-not  (Test-Path  'c:\\zabbix')) {mkdir c:\\zabbix}",    
+       "\$allProtocols = [System.Net.SecurityProtocolType]'Ssl3,Tls,Tls11,Tls12'",
+       "[System.Net.ServicePointManager]::SecurityProtocol = \$allProtocols",
+	     "Invoke-WebRequest ${LinkScript} -OutFile c:\\zabbix\\cm-windows-zabbix-script.ps1",   
+	     "powershell -executionpolicy bypass c:\\zabbix\\cm-windows-zabbix-script.ps1 ${Hostname}"
+	  ]	
+  ]
+
+if (server.osType=="linux")
+   ZabbixCommand= ["commandId": "RunShellScript",
+     "script": [
+	     "curl  ${LinkScript} -k -o cm-linux-zabbix-script.sh",    
+	     "chmod +x ./cm-linux-zabbix-script.sh",   
+	     "./cm-linux-zabbix-script.sh ${Hostname}"
+	  ]	
+  ]
+
+
+def HeaderZabbix = new RestApiUtil.RestOptions(
+      headers:['Content-Type':'application/json','Authorization':Token],
+      queryParams:["api-version":"2022-08-01"],
+      body:ZabbixCommand)
+def resultZabbix = RestApiUtil.callJsonApi("https://management.azure.com", server.uniqueId+"/runCommand", "", "", HeaderZabbix, 'POST')
+
+if (resultZabbix.success)
+{
+  println HeaderMsg+"Instalacao Zabbix iniciada - "+server.osTypeCode+" - "+Hostname
+  log.info(HeaderMsg+"Instalacao Zabbix iniciada - "+server.osTypeCode+" - "+Hostname)
+}
+else
+{
+  println HeaderMsg+"Erro executando runCommand: ${resultZabbix}"
+  log.info(HeaderMsg+"Erro executando runCommand: ${resultZabbix}")
+  throw new Exception(HeaderMsg+"Erro executando runCommand: ${resultZabbix}")	    
+}
+
+/*************************************************************************************/
+/*    Monitora por 5 minutos se agente foi instalado                                 */
+/*************************************************************************************/
+/************ Executado na task Generica
+int MaxTentativas = 5
+int Tentativas=1
+int SegsEntreTentativas=60
+boolean Instalado = false
+
+println HeaderMsg+"Monitorando a instalacao do agente: Tentativas:${MaxTentativas} / Segundos entre Tentativas:${SegsEntreTentativas}"
+log.info(HeaderMsg+"Monitorando a instalacao do agente: Tentativas:${MaxTentativas} / Segundos entre Tentativas:${SegsEntreTentativas}")
+sleep(SegsEntreTentativas*1000)
+while (! Instalado && Tentativas < MaxTentativas)
+{
+  log.info(HeaderMsg+"Tentativa ${Tentativas}")
+  Instalado = AgenteZabbixInstalado(server.id)
+  if (! Instalado)
+  {
+      Tentativas = Tentativas+1
+      sleep(SegsEntreTentativas*1000)
+  }
+}
+
+if (Instalado)
+{
+    println HeaderMsg+"Identificou instalacao do Agente Zabbix"
+    log.info(HeaderMsg+"Identificou instalacao do Agente Zabbix")
+}
+else 
+{
+    println HeaderMsg+"Nao identificou instalacao do Agente Zabbix"
+    log.info(HeaderMsg+"Nao identificou instalacao do Agente Zabbix")        
+    throw new Exception(HeaderMsg+"Nao identificou instalacao do Agente Zabbix")	
+}
+*************************************/
+EOFSCRIBE
+  dateCreated = "2023-08-15T00:40:54.000Z"
+  lastUpdated = "2023-08-15T00:40:54.000Z"
+}

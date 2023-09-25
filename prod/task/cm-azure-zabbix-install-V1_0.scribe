@@ -1,0 +1,16 @@
+resource "task" "cm-azure-zabbix-install-V1.0" {
+  code = "cm-azure-zabbix-install-V1.0"
+  name = "Equinix - CM - Azure - Zabbix - Install"
+  uuid = "16e913df-b245-4fa8-9adb-ddca94490ba6"
+  allowCustomConfig = true
+  dateCreated = "2023-08-15T00:40:54.000Z"
+  executeTarget = "local"
+  lastUpdated = "2023-08-15T00:45:09.000Z"
+  options = [
+    {
+      content = { uuid = "c8391d5c-2d4c-4dc7-8f63-2ccbde84ecfe" }
+      optionType = { code = "groovyScript" }
+    }
+  ]
+  taskType = { code = "groovyTask" }
+}
