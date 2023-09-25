@@ -1,0 +1,14 @@
+resource "container-type" "1949753e-ff69-4fc6-9f0a-62c02336e3fa" {
+  code = "1949753e-ff69-4fc6-9f0a-62c02336e3fa"
+  name = "Equinix Metal RedHat Enterprise Linux 7"
+  uuid = "67f1e1a0-2e41-479a-abf6-587af2007678"
+  containerVersion = "7"
+  entryPoint = ""
+  logTypeCode = "vm"
+  provisionType = { code = "equinixmetal" }
+  repositoryImage = ""
+  serverType = "vm"
+  shortName = "equinix-metal-redhat-enterprise-linux-7"
+  statTypeCode = "vm"
+  virtualImage = { code = "equinixmetal.image.os.rhel_7" }
+}
