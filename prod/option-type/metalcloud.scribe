@@ -1,0 +1,13 @@
+resource "option-type" "metalcloud" {
+  code = "metalcloud"
+  name = "Metal - Cloud"
+  uuid = "ca380b0a-21ed-4197-bd08-3004199b3c36"
+  dependsOnCode = "metalgroup"
+  fieldContext = "config.customOptions"
+  fieldLabel = "Cloud"
+  fieldName = "metalcloud"
+  optionList = { name = "Equinix Clouds" }
+  optionSource = "list"
+  required = true
+  type = "select"
+}
