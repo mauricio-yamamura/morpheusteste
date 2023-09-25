@@ -1,0 +1,14 @@
+resource "option-type" "Cloud" {
+  code = "Cloud"
+  name = "CP - Cloud"
+  uuid = "96ec8ea8-4eb1-4c7e-806b-9d3bbfe65c08"
+  dependsOnCode = "Grupo"
+  fieldContext = "config.customOptions"
+  fieldLabel = "Cloud"
+  fieldName = "Cloud"
+  labels = [ "PROD" ]
+  optionList = { name = "CP - Cloud" }
+  optionSource = "list"
+  required = true
+  type = "select"
+}

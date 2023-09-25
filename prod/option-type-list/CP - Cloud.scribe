@@ -1,0 +1,18 @@
+resource "option-type-list" "CP - Cloud" {
+  name = "CP - Cloud"
+  uuid = "4546215a-e1f5-4928-a104-e71e2c14f9ee"
+  apiType = "clouds"
+  labels = [ "PROD" ]
+  realTime = true
+  requestScript = <<EOFSCRIBE
+if (input.Grupo) {
+  results.siteId = input.Grupo
+}
+EOFSCRIBE
+  translationScript = <<EOFSCRIBE
+for (var x = 0; x < data.length; x++) {
+  results.push({name: data[x].name, value:data[x].id});
+}
+EOFSCRIBE
+  type = "api"
+}
