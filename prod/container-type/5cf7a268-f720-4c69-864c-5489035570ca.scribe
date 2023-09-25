@@ -1,0 +1,15 @@
+resource "container-type" "5cf7a268-f720-4c69-864c-5489035570ca" {
+  code = "5cf7a268-f720-4c69-864c-5489035570ca"
+  name = "Equinix Metal Ubuntu 20.04 LTS"
+  uuid = "6edb2df5-7b0c-4170-a357-2d3770c03137"
+  actions = [ { code = "generic-remove-node" } ]
+  containerVersion = "20.04"
+  entryPoint = ""
+  logTypeCode = "vm"
+  provisionType = { code = "equinixmetal" }
+  repositoryImage = ""
+  serverType = "vm"
+  shortName = "equinix-metal-ubuntu-20.04-lts"
+  statTypeCode = "vm"
+  virtualImage = { code = "equinixmetal.image.os.ubuntu_20_04" }
+}

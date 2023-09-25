@@ -1,0 +1,10 @@
+resource "instance-type-layout" "6decec8d-a372-4cb0-b25d-f7deec5d751e" {
+  code = "6decec8d-a372-4cb0-b25d-f7deec5d751e"
+  name = "Equinix Metal Ubuntu 20.04 LTS"
+  uuid = "95b447f8-5e56-4c66-acfe-2f56a333a2e8"
+  actions = [ { code = "generic-add-node" } ]
+  instanceType = { code = "ubuntu" }
+  instanceVersion = "20.04"
+  provisionType = { code = "equinixmetal" }
+  workloads = [ { code = "5cf7a268-f720-4c69-864c-5489035570ca" } ]
+}
