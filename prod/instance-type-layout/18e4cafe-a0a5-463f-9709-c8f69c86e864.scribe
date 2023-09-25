@@ -1,0 +1,10 @@
+resource "instance-type-layout" "18e4cafe-a0a5-463f-9709-c8f69c86e864" {
+  code = "18e4cafe-a0a5-463f-9709-c8f69c86e864"
+  name = "Equinix Metal AlmaLinux OS 9"
+  uuid = "8d35f5a2-66ea-4d78-a07a-e809c965fd05"
+  actions = [ { code = "generic-add-node" } ]
+  instanceType = { code = "almalinux" }
+  instanceVersion = "9"
+  provisionType = { code = "equinixmetal" }
+  workloads = [ { code = "235fe827-d798-493c-88e5-e6e76027a892" } ]
+}

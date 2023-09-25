@@ -1,0 +1,15 @@
+resource "container-type" "235fe827-d798-493c-88e5-e6e76027a892" {
+  code = "235fe827-d798-493c-88e5-e6e76027a892"
+  name = "Equinix Metal AlmaLinux OS 9"
+  uuid = "101fb028-d74c-441e-ae0a-2cf11f4577d3"
+  actions = [ { code = "generic-remove-node" } ]
+  containerVersion = "9"
+  entryPoint = ""
+  logTypeCode = "vm"
+  provisionType = { code = "equinixmetal" }
+  repositoryImage = ""
+  serverType = "vm"
+  shortName = "equinix-metal-almalinux-os-9"
+  statTypeCode = "vm"
+  virtualImage = { code = "equinixmetal.image.os.alma_9" }
+}
